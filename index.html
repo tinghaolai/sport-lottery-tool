@@ -1,0 +1,56 @@
+<html>
+    <head>
+        <title>Sport Lottery Tool</title>
+    </head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.13.0/theme-chalk/index.css">
+    <style>
+    </style>
+    <body>
+    <div id="app">
+        <el-row>
+            <el-col :span="12" :offset="6">
+                <el-form :model="form" label-width="200px">
+                    <el-form-item label="type">
+                        <el-select v-model="form.type">
+                            <el-option value="basketball" label="basketball"></el-option>
+                            <el-option value="baseball" label="baseball"></el-option>
+                            <el-option value="hockey" label="hockey"></el-option>
+                            <el-option value="soccer" label="soccer"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="away team betting rate">
+                        <el-input v-model="form.awayBettingRate" @change="onBettingRateChange(form.awayBettingRate, 'homeBettingRate')" type="number"></el-input>
+                    </el-form-item>
+                    <el-form-item label="home team betting rate">
+                        <el-input v-model="form.homeBettingRate" @change="onBettingRateChange(form.homeBettingRate, 'awayBettingRate')" type="number"></el-input>
+                    </el-form-item>
+                </el-form>
+            </el-col>
+        </el-row>
+    </div>
+    <script src="plugins/vue.js"></script>
+    <script src="plugins/element.min.js"></script>
+    <script src="plugins/moment.min.js"></script>
+    <script type="text/javascript">
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    form: {
+                        type: [],
+                        awayBettingRate: null,
+                        homeBettingRate: null,
+                    },
+                };
+            },
+            methods: {
+                onBettingRateChange(value, modifyTarget) {
+                    if (value) {
+                        this.form[modifyTarget] = 100 - value;
+                    }
+                },
+            },
+        })
+    </script>
+    </body>
+</html>
