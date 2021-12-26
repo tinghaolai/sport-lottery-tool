@@ -9,6 +9,7 @@
     <div id="app">
         <el-row>
             <el-col :span="12" :offset="6">
+                <h3>Betting Record</h3>
                 <el-form :model="form" label-width="200px">
                     <el-form-item label="type">
                         <el-select v-model="form.type">
@@ -26,6 +27,7 @@
                     </el-form-item>
                 </el-form>
                 <el-divider></el-divider>
+                <h3>Setting</h3>
                 <el-form :model="setting" label-width="100px">
                     <el-form-item label="url">
                         <el-input v-model="setting.publicBettingURL"></el-input>
