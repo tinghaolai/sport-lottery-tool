@@ -33,6 +33,30 @@
                     <el-form-item label="url">
                         <el-input v-model="setting.publicBettingURL"></el-input>
                     </el-form-item>
+                    <el-form-item label="GTM">
+                        <el-input v-model="setting.gmt" type="number"></el-input>
+                    </el-form-item>
+                </el-form>
+                <el-divider></el-divider>
+                <h3>Public betting api</h3>
+                <el-form :model="publicBetting" label-width="100px">
+                    <el-form-item label="type">
+                        <el-select v-model="publicBetting.type" placeholder="Type of sport" clearable>
+                            <el-option label="NBA" value="nba"></el-option>
+                            <el-option label="NHL" value="nhl"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="date">
+                        <el-date-picker
+                                value-format="yyyyMMdd"
+                                v-model="publicBetting.date"
+                                type="date"
+                                placeholder="pick date">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="">
+                        <el-button type="success" @click="searchPublic">Search</el-button>
+                    </el-form-item>
                 </el-form>
             </el-col>
         </el-row>
@@ -44,6 +68,7 @@
     <script type="text/javascript">
         let setting = {
             publicBettingURL: null,
+            gmt: -5,
         };
 
         function getVueWatch() {
@@ -61,6 +86,7 @@
             el: '#app',
             data() {
                 let storageSetting = JSON.parse(localStorage.getItem('setting'));
+                let userSetting = (storageSetting) ? this.fixEmptyFormProperty(storageSetting, setting) : setting;
 
                 return {
                     form: {
@@ -68,7 +94,11 @@
                         awayBettingRate: null,
                         homeBettingRate: null,
                     },
-                    setting: (storageSetting) ? this.fixEmptyFormProperty(storageSetting, setting) : setting,
+                    setting: userSetting,
+                    publicBetting: {
+                        type: null,
+                        date: moment().add(userSetting.gmt - 8, 'hours').format('yyyyMMDD'),
+                    },
                 };
             },
             methods: {
@@ -85,6 +115,8 @@
                     });
 
                     return storageForm;
+                },
+                searchPublic() {
                 },
             },
             watch: getVueWatch(),
