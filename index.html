@@ -180,7 +180,6 @@
                     });
                 },
                 parsePublicBetting(response) {
-                    console.log('parsePublicBetting');
                     this.publicBettingResult.league = response.league.name;
                     this.publicBettingResult.games = response.games.map(game => {
                         let awayTeam = game.teams.find(team => team.id === game.away_team_id);
@@ -192,7 +191,6 @@
                         if (homeTeam) {
                             game.homeTeamName = homeTeam.full_name;
                         }
-
 
                         if (game.odds && game.odds.length) {
                             let lastOdd = game.odds[0];
