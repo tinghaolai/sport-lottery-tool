@@ -25,6 +25,12 @@
                         <el-input v-model="form.homeBettingRate" @change="onBettingRateChange(form.homeBettingRate, 'awayBettingRate')" type="number"></el-input>
                     </el-form-item>
                 </el-form>
+                <el-divider></el-divider>
+                <el-form :model="setting" label-width="100px">
+                    <el-form-item label="url">
+                        <el-input v-model="setting.publicBettingURL"></el-input>
+                    </el-form-item>
+                </el-form>
             </el-col>
         </el-row>
     </div>
@@ -33,15 +39,33 @@
     <script src="plugins/moment.min.js"></script>
     <script src="plugins/axios.min.js"></script>
     <script type="text/javascript">
+        let setting = {
+            publicBettingURL: null,
+        };
+
+        function getVueWatch() {
+            let watchObject = {};
+            Object.keys(setting).forEach(key => {
+                watchObject['setting.' + key] = function () {
+                    localStorage.setItem('setting', JSON.stringify(this.setting));
+                }
+            });
+
+            return watchObject;
+        }
+
         new Vue({
             el: '#app',
             data() {
+                let storageSetting = JSON.parse(localStorage.getItem('setting'));
+
                 return {
                     form: {
                         type: [],
                         awayBettingRate: null,
                         homeBettingRate: null,
                     },
+                    setting: (storageSetting) ? this.fixEmptyFormProperty(storageSetting, setting) : setting,
                 };
             },
             methods: {
@@ -50,7 +74,17 @@
                         this.form[modifyTarget] = 100 - value;
                     }
                 },
+                fixEmptyFormProperty(storageForm, originForm) {
+                    Object.keys(originForm).forEach(originKey => {
+                        if (storageForm[originKey] === undefined) {
+                            storageForm[originKey] = originForm[originKey];
+                        }
+                    });
+
+                    return storageForm;
+                },
             },
+            watch: getVueWatch(),
         })
     </script>
     </body>
