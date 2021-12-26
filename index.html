@@ -58,6 +58,56 @@
                         <el-button type="success" @click="searchPublic">Search</el-button>
                     </el-form-item>
                 </el-form>
+                <el-divider></el-divider>
+                <h3>Public betting result</h3>
+                <el-form label-width="100px">
+                    <el-form-item label="League">
+                        <div>{{ (publicBettingResult.league) ? publicBettingResult.league : '-' }}</div>
+                    </el-form-item>
+                    <el-form-item label="League">
+                        <el-table :data="publicBettingResult.games" style="width: 100%">
+                            <el-table-column>
+                                <template slot="header" slot-scope="data">
+                                    <div>Bet nums</div>
+                                    <div>Over / Under</div>
+                                </template>
+                                <template slot-scope="data">
+                                    <div>
+                                        bets: {{ (data.row.numBets) ? data.row.numBets : '-' }}
+                                    </div>
+                                    <div>
+                                        Public: {{ data.row.totalOverPercentage }} / {{ data.row.totalUnderPercentage }}
+                                    </div>
+                                    <div>
+                                        Money: {{ data.row.totalOverMoneyPercentage }} / {{ data.row.totalUnderMoneyPercentage }}
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            <template v-for="(setting, prefix) in {
+                                away: {
+                                    label: 'Away team',
+                                    teamName: 'awayTeamName',
+                                    spreadPercentage: 'awaySpreadPercentage',
+                                    spreadMoneyPercentage: 'awaySpreadMoneyPercentage',
+                                },
+                                home: {
+                                    label: 'Home team',
+                                    teamName: 'homeTeamName',
+                                    spreadPercentage: 'homeSpreadPercentage',
+                                    spreadMoneyPercentage: 'homeSpreadMoneyPercentage',
+                                }
+                            }">
+                                <el-table-column :label="setting.label">
+                                    <template slot-scope="data">
+                                        <div>{{ (data.row[setting.teamName]) ? data.row[setting.teamName] : 'Team name error' }}</div>
+                                        <div>spread: {{ data.row[setting.spreadPercentage] }} %</div>
+                                        <div>spread money: {{ data.row[setting.spreadMoneyPercentage] }} %</div>
+                                    </template>
+                                </el-table-column>
+                            </template>
+                        </el-table>
+                    </el-form-item>
+                </el-form>
             </el-col>
         </el-row>
     </div>
@@ -96,8 +146,12 @@
                     },
                     setting: userSetting,
                     publicBetting: {
-                        type: null,
+                        type: 'nba',
                         date: moment().add(userSetting.gmt - 8, 'hours').format('yyyyMMDD'),
+                    },
+                    publicBettingResult: {
+                        league: null,
+                        games: [],
                     },
                 };
             },
@@ -117,6 +171,44 @@
                     return storageForm;
                 },
                 searchPublic() {
+                    axios.get(this.setting.publicBettingURL + this.publicBetting.type + '?date=' + this.publicBetting.date).
+                    then((response) => {
+                        this.parsePublicBetting(response.data);
+                    }).catch((error) => {
+                        console.log('search public api error');
+                        console.log(error);
+                    });
+                },
+                parsePublicBetting(response) {
+                    console.log('parsePublicBetting');
+                    this.publicBettingResult.league = response.league.name;
+                    this.publicBettingResult.games = response.games.map(game => {
+                        let awayTeam = game.teams.find(team => team.id === game.away_team_id);
+                        let homeTeam = game.teams.find(team => team.id === game.home_team_id);
+                        if (awayTeam) {
+                            game.awayTeamName = awayTeam.full_name;
+                        }
+
+                        if (homeTeam) {
+                            game.homeTeamName = homeTeam.full_name;
+                        }
+
+
+                        if (game.odds && game.odds.length) {
+                            let lastOdd = game.odds[0];
+                            game.numBets = lastOdd.num_bets;
+                            game.awaySpreadPercentage = lastOdd.spread_away_public;
+                            game.awaySpreadMoneyPercentage = lastOdd.spread_away_money;
+                            game.homeSpreadPercentage = lastOdd.spread_home_public;
+                            game.homeSpreadMoneyPercentage = lastOdd.spread_away_public;
+                            game.totalOverPercentage = lastOdd.total_over_public;
+                            game.totalOverMoneyPercentage = lastOdd.total_over_money;
+                            game.totalUnderPercentage = lastOdd.total_under_public;
+                            game.totalUnderMoneyPercentage = lastOdd.total_under_money;
+                        }
+
+                        return game;
+                    });
                 },
             },
             watch: getVueWatch(),
