@@ -5,6 +5,9 @@
     </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.13.0/theme-chalk/index.css">
     <style>
+        .predict {
+            color: #F56C6C;
+        }
     </style>
     <body>
     <div id="app">
@@ -59,6 +62,42 @@
                     </el-form-item>
                 </el-form>
                 <el-divider></el-divider>
+                <h3>Public betting filter</h3>
+                <el-form label-width="200">
+                    <el-form-item label="spread range">
+                        <el-slider
+                                v-model="publicBettingFilter.spreadRange"
+                                range
+                                show-stops
+                                :max="100" :min="0">
+                        </el-slider>
+                    </el-form-item>
+                    <el-form-item label="spread money range">
+                        <el-slider
+                                v-model="publicBettingFilter.spreadMoneyRange"
+                                range
+                                show-stops
+                                :max="100" :min="0">
+                        </el-slider>
+                    </el-form-item>
+                    <el-form-item label="total range">
+                        <el-slider
+                                v-model="publicBettingFilter.totalRange"
+                                range
+                                show-stops
+                                :max="100" :min="0">
+                        </el-slider>
+                    </el-form-item>
+                    <el-form-item label="total money range">
+                        <el-slider
+                                v-model="publicBettingFilter.totalMoneyRange"
+                                range
+                                show-stops
+                                :max="100" :min="0">
+                        </el-slider>
+                    </el-form-item>
+                </el-form>
+                <el-divider></el-divider>
                 <h3>Public betting result</h3>
                 <el-form label-width="100px">
                     <el-form-item label="League">
@@ -76,7 +115,13 @@
                                         bets: {{ (data.row.numBets) ? data.row.numBets : '-' }}
                                     </div>
                                     <div>
-                                        Public: {{ data.row.totalOverPercentage }} / {{ data.row.totalUnderPercentage }}
+                                        Public:
+                                        <span class="getFilterClass('total', data.row.totalOverPercentage, data.row.totalOverMoneyPercentage)">
+                                            {{ data.row.totalOverPercentage }}
+                                        </span> /
+                                        <span :class="getFilterClass('total', data.row.totalUnderPercentage, data.row.totalUnderMoneyPercentage)">
+                                            {{ data.row.totalUnderPercentage }}
+                                        </span>
                                     </div>
                                     <div>
                                         Money: {{ data.row.totalOverMoneyPercentage }} / {{ data.row.totalUnderMoneyPercentage }}
@@ -99,7 +144,9 @@
                             }">
                                 <el-table-column :label="setting.label">
                                     <template slot-scope="data">
-                                        <div>{{ (data.row[setting.teamName]) ? data.row[setting.teamName] : 'Team name error' }}</div>
+                                        <div :class="getFilterClass('spread', data.row[setting.spreadPercentage], data.row[setting.spreadMoneyPercentage])">
+                                            {{ (data.row[setting.teamName]) ? data.row[setting.teamName] : 'Team name error' }}
+                                        </div>
                                         <div>spread: {{ data.row[setting.spreadPercentage] }} %</div>
                                         <div>spread money: {{ data.row[setting.spreadMoneyPercentage] }} %</div>
                                     </template>
@@ -121,11 +168,24 @@
             gmt: -5,
         };
 
+        let publicBettingFilter = {
+            spreadRange: [0, 100],
+            spreadMoneyRange: [0, 100],
+            totalRange: [0, 100],
+            totalMoneyRange: [0, 100],
+        };
+
         function getVueWatch() {
             let watchObject = {};
             Object.keys(setting).forEach(key => {
                 watchObject['setting.' + key] = function () {
                     localStorage.setItem('setting', JSON.stringify(this.setting));
+                }
+            });
+
+            Object.keys(publicBettingFilter).forEach(key => {
+                watchObject['publicBettingFilter.' + key] = function () {
+                    localStorage.setItem('publicBettingFilter', JSON.stringify(this.publicBettingFilter));
                 }
             });
 
@@ -136,7 +196,9 @@
             el: '#app',
             data() {
                 let storageSetting = JSON.parse(localStorage.getItem('setting'));
+                let storagePublicBettingFilter = JSON.parse(localStorage.getItem('publicBettingFilter'));
                 let userSetting = (storageSetting) ? this.fixEmptyFormProperty(storageSetting, setting) : setting;
+                let userPublicBettingFilter = (storagePublicBettingFilter) ? this.fixEmptyFormProperty(storagePublicBettingFilter, publicBettingFilter) : publicBettingFilter;
 
                 return {
                     form: {
@@ -153,6 +215,7 @@
                         league: null,
                         games: [],
                     },
+                    publicBettingFilter: userPublicBettingFilter,
                 };
             },
             methods: {
@@ -207,6 +270,18 @@
 
                         return game;
                     });
+                },
+                getFilterClass(type, percentage, money) {
+                    if (
+                        percentage >= this.publicBettingFilter[type + 'Range'][0] &&
+                        percentage <= this.publicBettingFilter[type + 'Range'][1] &&
+                        money >= this.publicBettingFilter[type + 'MoneyRange'][0] &&
+                        money <= this.publicBettingFilter[type + 'MoneyRange'][1]
+                    ) {
+                        return 'predict';
+                    }
+
+                    return '';
                 },
             },
             watch: getVueWatch(),
